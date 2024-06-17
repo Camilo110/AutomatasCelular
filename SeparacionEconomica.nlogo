@@ -1,13 +1,52 @@
 
+breed [mediums medium]
+breed [Highs High]
+breed [Lows Low]
+
+to setup
+  clear-all
+  random-services
+  create-community
+end
+
+
+
+to go
+  tick
+  increment-High
+  Increment-Medium
+  Increment-Low
+  apply-politic
+end
+
+to increment-High
+end
+
+to Increment-Medium
+end
+
+to increment-Low
+end
+
+to apply-politic
+  ;determinar donde crear un hospital
+end
+
+to random-services
+  ;detememinar estado inicial
+end
+
+to create-community
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+614
+415
 -1
 -1
-13.0
+12.0
 1
 10
 1
