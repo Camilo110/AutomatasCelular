@@ -1,22 +1,22 @@
-
-breed [mediums medium]
-breed [Highs High]
-breed [Lows Low]
+breed [mids mid]
+breed [ups up]
+breed [lows low]
 
 to setup
   clear-all
   random-services
   create-community
+  reset-ticks
 end
 
 
 
 to go
-  tick
   increment-High
   Increment-Medium
   Increment-Low
   apply-politic
+  tick
 end
 
 to increment-High
@@ -33,20 +33,44 @@ to apply-politic
 end
 
 to random-services
-  ;detememinar estado inicial
+
 end
 
 to create-community
+  create-mids (community * percentUp)
+  [
+    set color orange
+    setxy random-xcor random-ycor
+  ]
+  create-ups (community * percentMid)
+  [
+    set color green
+    setxy random-xcor random-ycor
+  ]
+  create-lows (community * (1 - percentUp - percentMid))
+  [
+    set color red
+    setxy random-xcor random-ycor
+  ]
+  ask turtles [
+    set shape "square"
+    set size 1
+    setxy round xcor round ycor
+  ]
+end
+
+to-report count-lows
+  report turtles with [breed = "low"]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-614
-415
+638
+439
 -1
 -1
-12.0
+20.0
 1
 10
 1
@@ -56,15 +80,131 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-10
+10
+-10
+10
 0
 0
 1
 ticks
 30.0
+
+SLIDER
+17
+16
+189
+49
+community
+community
+50
+300
+50.0
+10
+1
+NIL
+HORIZONTAL
+
+BUTTON
+0
+141
+63
+174
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+873
+37
+1073
+187
+populations
+time
+pop
+0.0
+100.0
+0.0
+40.0
+true
+false
+"" ""
+PENS
+"ups" 1.0 0 -14439633 true "" "plot count ups"
+"mids" 1.0 0 -955883 true "" "plot count mids"
+"lows" 1.0 0 -2674135 true "" "plot count lows"
+
+BUTTON
+62
+141
+136
+174
+go-once
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+17
+66
+189
+99
+percentUp
+percentUp
+0
+0.5
+0.2
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+17
+100
+189
+133
+percentMid
+percentMid
+0
+0.5
+0.3
+0.1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+136
+141
+210
+174
+go
+go\n
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
