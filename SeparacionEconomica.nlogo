@@ -6,6 +6,7 @@ breed [schools sch]
 breed [markets mkt]
 
 globals [
+  aux
   optionColor
   erasing?                 ;; is the current draw-cells mouse click erasing or adding?
 ]
@@ -22,6 +23,7 @@ middles-own [
 ;; inicializacion del mapa aleatorio
 to setup
   clear-all
+
   random-services
   create-community
   reset-ticks
@@ -30,6 +32,7 @@ end
 ;; Inicializacion del mapa en blanco
 to setup-blank
   ca
+  set aux 0
   ask turtles
     [ cell-void ]
   reset-ticks
@@ -132,30 +135,21 @@ end
 
 ;;
 to draw-cells [target-color]
-  ifelse mouse-down? [
-    if erasing? = 0 [
-      set erasing? target-color = [pcolor] of patch mouse-xcor mouse-ycor
-    ]
-    ask turtles mouse-xcor mouse-ycor [
-      ifelse erasing? [
-        cell-void
-      ] [
-        ifelse optionColor = white [
-          cell-mid
-        ] [
-          create-uppers 1 [
-            set color 25             ;; orange:25
-                                     ;;set kindCell 2
+
+  ifelse mouse-down?[
+    ifelse (any? turtles-on patch mouse-xcor mouse-ycor)[
+      show "borre"]
+    [
+          create-turtles 1 [
+            set color 25             ;; orange:                          ;;set kindCell 2
             set shape "square"
             set xcor round mouse-xcor
             set ycor round mouse-ycor
           ]
-        ]
-      ]
-    ]
     display
+    ]
   ][
-    set erasing? 0
+    set aux 0
   ]
 end
 
@@ -164,7 +158,6 @@ to seleccolor
   set optionColor opcolor  ;; declaramos el color que vamos a dibujar
   draw-cells optionColor  ;; enviamos el color a usar
 end
-
 
 
 @#$#@#$#@
