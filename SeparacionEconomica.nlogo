@@ -7,7 +7,6 @@ breed [markets mkt]
 
 globals [
   maxIngreso
-  optionColor
   erasing?                 ;; is the current draw-cells mouse click erasing or adding?
 ]
 
@@ -30,9 +29,18 @@ to setup
 
   clear-all
 
-  create-hospitals num-hop [cell-hop]
-  create-schools num-sch [cell-sch]
-  create-markets num-mkt [cell-mkt]
+  create-turtles num-hop [
+    cell-hop
+    setxy random-xcor random-ycor
+  ]
+  create-turtles num-sch [
+    cell-sch
+    setxy random-xcor random-ycor
+  ]
+  create-turtles num-mkt [
+    cell-mkt
+    setxy random-xcor random-ycor
+  ]
   create-community
 
   ask turtles [
@@ -87,17 +95,17 @@ end
 
 ;; Creacion de los grupos sociales, y cuantos por cada grupo
 to create-community
-  create-uppers (community * percentUp)
+  create-turtles (community * percentUp)
   [
     cell-up
     setxy random-xcor random-ycor
   ]
-  create-middles (community * percentMid)
+  create-turtles (community * percentMid)
   [
     cell-mid
     setxy random-xcor random-ycor
   ]
-  create-lowers (community * (1 - percentUp - percentMid))
+  create-turtles (community * (1 - percentUp - percentMid))
   [
     cell-low
     setxy random-xcor random-ycor
@@ -112,46 +120,57 @@ to cell-void
 end
 
 to cell-up
-  set ingresoPromedio random-float 3 + 7
-  set densidadPoblacional (random-float 3 + 1)
-  set AccesoSalud random-float 2 + 8
-  set AccesoServicios 10
-  set nivelEducativo random-float 2 + 8
-  set color 55            ;; green:55
+    set breed uppers
+    set ingresoPromedio random-float 3 + 7
+    set densidadPoblacional (random-float 3 + 1)
+    set AccesoSalud random-float 2 + 8
+    set AccesoServicios 10
+    set nivelEducativo random-float 2 + 8
+    set color 55            ;; green:55
+    set shape  "square"
+
 end
 
 to cell-mid
+  set breed middles
   set ingresoPromedio random-float 4 + 3
   set densidadPoblacional (random-float 4 + 3)
   set AccesoSalud random-float 3 + 5
   set AccesoServicios random-float 1 + 9
   set nivelEducativo random-float 2 + 6
   set color 25             ;; orange:25
+  set shape  "square"
 end
 
 
 to cell-low
+  set breed lowers
   set ingresoPromedio random-float 4
   set densidadPoblacional (random-float 3 + 7)
   set AccesoSalud random-float 3 + 3
   set AccesoServicios random-float 1 + 7
   set nivelEducativo random-float 4 + 2
   set color 15             ;; red:15
+  set shape  "square"
 end
 
 to cell-hop
+  set breed hospitals
   set color 105            ;; blue:105
-  setxy random-xcor random-ycor
+  set shape  "square"
+
 end
 
 to cell-sch
+  set breed schools
   set color 45             ;; yellow:45
-  setxy random-xcor random-ycor
+  set shape  "square"
 end
 
 to cell-mkt
+  set breed markets
   set color 135             ;; pink:135
-  setxy random-xcor random-ycor
+  set shape  "square"
 end
 
 ;; FIN INICIALIZACIONES DE LAS CELDAS
@@ -169,7 +188,7 @@ end
 to reproducir
   let cordx pxcor
   let cordy pycor
-  if  count lowers-on neighbors >= 3
+  if  count lowers-on neighbors >= 2
   [ ;;    if  count lowers in-radius 1 >= 2[    otra manera pra tener en cuenta
     ask one-of lowers-on neighbors [
       hatch 1[
@@ -177,7 +196,7 @@ to reproducir
       ]
     ]
   ]
-  if  count middles-on neighbors >= 3[
+  if  count middles-on neighbors >= 2[
     ask one-of middles-on neighbors[
       hatch 1[
         setxy cordx cordy
@@ -230,27 +249,72 @@ end
 
 ;; DIBUJAR CELDA MEDIANTE CLICK
 ;; Selccionamos el color
-to seleccolor
-  set optionColor opcolor  ;; declaramos el color que vamos a dibujar
-  draw-cells optionColor  ;; enviamos el color a usar
-end
 
-to draw-cells [target-color]
 
-  if mouse-down?[
-    ifelse (any? turtles-on patch mouse-xcor mouse-ycor)[
-      show "borre"]
-    [
-          create-turtles 1 [
-            set color 25             ;; orange:                          ;;set kindCell 2
-            set shape "square"
+to draw-cells
+
+  if mouse-down? [
+    ifelse (any? turtles-on patch mouse-xcor mouse-ycor) [
+    ] [
+      ifelse optionColor = "orange" [
+        crt 1 [
+          cell-mid
+          set xcor round mouse-xcor
+          set ycor round mouse-ycor
+        ]
+      ] [
+        ifelse optionColor = "red" [
+          crt 1 [
+            cell-low
             set xcor round mouse-xcor
             set ycor round mouse-ycor
           ]
+        ] [
+          ifelse optionColor = "green" [
+            crt 1 [
+              cell-up
+              set xcor round mouse-xcor
+              set ycor round mouse-ycor
+            ]
+          ] [
+            ifelse optionColor = "blue" [
+              crt 1 [
+                cell-hop
+                set xcor round mouse-xcor
+                set ycor round mouse-ycor
+              ]
+            ] [
+              ifelse optionColor = "yellow" [
+                crt 1 [
+                  cell-sch
+                  set xcor round mouse-xcor
+                  set ycor round mouse-ycor
+                ]
+              ] [
+                crt 1 [
+                  cell-mkt
+                  set xcor round mouse-xcor
+                  set ycor round mouse-ycor
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
     display
+  ]
+end
+
+to die-turtle-at [x y]
+  let turtle-to-take one-of turtles-on patch x y
+  if turtle-to-take != nobody [
+    ask turtle-to-take [
+      die
     ]
   ]
 end
+
 ;; FIN DIBUJAR CELDA MEDIANTE CLICK
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -274,8 +338,8 @@ GRAPHICS-WINDOW
 15
 -15
 15
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -313,10 +377,10 @@ NIL
 1
 
 PLOT
-816
-12
-1089
-174
+616
+10
+889
+172
 populations
 time
 pop
@@ -358,7 +422,7 @@ percentUp
 percentUp
 0
 0.5
-0.2
+0.4
 0.1
 1
 NIL
@@ -373,7 +437,7 @@ percentMid
 percentMid
 0
 0.5
-0.2
+0.3
 0.1
 1
 NIL
@@ -397,10 +461,10 @@ NIL
 1
 
 MONITOR
-1011
-185
-1112
-234
+811
+183
+912
+232
 Lowers
 count turtles with [ color = red ]
 2
@@ -408,10 +472,10 @@ count turtles with [ color = red ]
 12
 
 MONITOR
-906
-186
-1010
-235
+706
+184
+810
+233
 Middles
 count turtles with [ color = orange ]
 2
@@ -419,10 +483,10 @@ count turtles with [ color = orange ]
 12
 
 MONITOR
-799
-186
-904
-235
+599
+184
+704
+233
 uppers
 count turtles with [ color = green ]
 2
@@ -434,10 +498,10 @@ CHOOSER
 411
 210
 456
-opcolor
-opcolor
-55 25 15 105 45 135
-0
+optionColor
+optionColor
+"green" "orange" "red" "blue" "yellow" "pink"
+3
 
 BUTTON
 29
@@ -462,7 +526,7 @@ BUTTON
 181
 410
 draw cell
-seleccolor
+draw-cells
 T
 1
 T
