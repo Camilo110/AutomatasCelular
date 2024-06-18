@@ -1,17 +1,42 @@
+globals [maxIngreso]
 breed [mids mid]
 breed [ups up]
 breed [lows low]
 
+
+
+
+turtles-own [
+  ingresoPromedio
+  densidadPoblacional
+  nivelEducativo
+  AccesoServicios
+  AccesoSalud
+  AccesoEducacion
+  AccesoTiendas
+]
+
 to setup
   clear-all
+  set maxIngreso max-one-of turtles [ingresoPromedio]
   random-services
   create-community
+
+  ask n-of 10 patches [
+    set pcolor blue]
+
   reset-ticks
 end
 
 
 
 to go
+  set maxIngreso max-one-of turtles [ingresoPromedio]
+
+  ask turtles [
+    rate
+  ]
+
   increment-High
   Increment-Medium
   Increment-Low
@@ -20,6 +45,9 @@ to go
 end
 
 to increment-High
+  ask turtles [
+    set ingresoPromedio ingresoPromedio * 1.3
+  ]
 end
 
 to Increment-Medium
@@ -36,20 +64,61 @@ to random-services
 
 end
 
-to create-community
-  create-mids (community * percentUp)
-  [
-    set color orange
-    setxy random-xcor random-ycor
+to rate
+  let score calc-score
+  ifelse score <= 4
+  [set breed lows
+   set color red]
+  [ifelse score <= 7
+    [set breed mids
+     set color orange]
+    [set breed ups
+     set color green]
   ]
+  set shape  "square"
+end
+
+to-report calc-score
+
+  let score 10 - densidadPoblacional + (ingresoPromedio / maxIngreso)
+
+  ask patches with [pcolor = blue] [
+    let cordx pxcor
+    let cordy pycor
+    ask turtles in-radius 5 [
+      show  distancexy cordx cordy
+    ]
+  ]
+  report score
+end
+
+to create-community
+
   create-ups (community * percentMid)
   [
     set color green
+    set ingresoPromedio random-float 3 + 7
+    set densidadPoblacional 10 - (random-float 3 + 1)
+    set AccesoSalud random-float 1 + 9
+    set nivelEducativo random-float 2 + 8
     setxy random-xcor random-ycor
+  ]
+  create-mids (community * percentUp)
+  [
+    set color orange
+    set ingresoPromedio random-float 4 + 3
+    set densidadPoblacional (random-float 4 + 3)
+    set AccesoSalud random-float 1 + 9
+    set nivelEducativo random-float 3 + 6
+    setxy (min-pxcor + (who - 1)) random-ycor
   ]
   create-lows (community * (1 - percentUp - percentMid))
   [
     set color red
+    set ingresoPromedio random-float 4
+    set densidadPoblacional 10 - (random-float 3 + 7)
+    set AccesoSalud random-float 3 + 4
+    set nivelEducativo random-float 4 + 2
     setxy random-xcor random-ycor
   ]
   ask turtles [
@@ -62,6 +131,17 @@ end
 to-report count-lows
   report turtles with [breed = "low"]
 end
+
+
+;;;
+ ; let n community
+ ; let spacing 1 ; adjust the spacing between agents
+ ; let xcord n * spacing / 2 ; starting x-coordinate for the first agent
+ ; create-lows n [
+ ;   setxy xcord 0 ; place the agent at the current x-coordinate and y-coordinate 0
+ ;   set xcord xcord + 1 ; update the x-coordinate for the next agent
+ ;]
+;;;
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
