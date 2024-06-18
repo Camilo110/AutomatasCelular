@@ -37,7 +37,7 @@ to setup
     cell-sch
     setxy random-xcor random-ycor
   ]
-  create-turtles num-mkt [
+  create-turtles num-mkt [  ;; crea tiendas
     cell-mkt
     setxy random-xcor random-ycor
   ]
@@ -57,7 +57,6 @@ end
 
 ;; Inicializacion del mapa en blanco
 to setup-blank
-  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
   ca
   ask turtles
     [ cell-void ]
@@ -80,6 +79,8 @@ to go
   ]
   set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
 
+
+
   ask patches with [not any? turtles-here][
     reproducir
   ]
@@ -87,6 +88,8 @@ to go
   ask turtles with [breed = uppers or breed = middles or breed = lowers][
     rate
   ]
+
+   ejemplo-cambio
 
 
   tick
@@ -185,10 +188,16 @@ to aumentar-ingreso-promedio [tasa]
   set ingresoPromedio ingresoPromedio * (1 + tasa)
 end
 
-to reproducir
+; definir como se crean los hospital y tiendas y demás
+
+; depedniedo de un rango de densidad poblacional se cree otra celda al lado y se le reduzca a la mitad
+
+;; dependiendo de densidad poblacion y si no tienne servicios cerca, deberia de morir
+
+to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear un low si hay 4 lowers y hay un hospital y una escuela
   let cordx pxcor
   let cordy pycor
-  if  count lowers-on neighbors >= 2
+  if  count lowers-on neighbors >= 2  ;; si tieene 2 vecinos lower se crea
   [ ;;    if  count lowers in-radius 1 >= 2[    otra manera pra tener en cuenta
     ask one-of lowers-on neighbors [
       hatch 1[
@@ -209,8 +218,17 @@ to reproducir
         setxy cordx cordy
       ]
     ]
+
   ]
 end
+
+;; regla sustentacion
+to ejemplo-cambio
+  ask turtles with [breed = uppers and count hospitals in-radius 5 = 0] [
+      cell-mid
+  ]
+end
+
 
 
 to rate
@@ -353,7 +371,7 @@ community
 community
 50
 300
-110.0
+120.0
 10
 1
 NIL
@@ -422,7 +440,7 @@ percentUp
 percentUp
 0
 0.5
-0.4
+0.1
 0.1
 1
 NIL
@@ -437,7 +455,7 @@ percentMid
 percentMid
 0
 0.5
-0.3
+0.2
 0.1
 1
 NIL
@@ -501,7 +519,7 @@ CHOOSER
 optionColor
 optionColor
 "green" "orange" "red" "blue" "yellow" "pink"
-3
+0
 
 BUTTON
 29
@@ -546,7 +564,7 @@ num-hop
 num-hop
 0
 100
-9.0
+22.0
 1
 1
 NIL
@@ -561,7 +579,7 @@ num-sch
 num-sch
 0
 100
-14.0
+18.0
 1
 1
 NIL
@@ -576,7 +594,7 @@ num-mkt
 num-mkt
 0
 100
-15.0
+24.0
 1
 1
 NIL
