@@ -58,17 +58,28 @@ end
 
 
 to go
-  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
-
   ask uppers [
-    rate
+    aumentar-densidad-poblacional 0.0005
+    aumentar-ingreso-promedio 0.0001
   ]
   ask middles [
-    rate
+    aumentar-densidad-poblacional 0.0005
+    aumentar-ingreso-promedio 0.0001
   ]
   ask lowers [
+    aumentar-densidad-poblacional 0.0005
+    aumentar-ingreso-promedio 0.0001
+  ]
+  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
+
+  ask patches with [not any? turtles-here][
+    reproducir
+  ]
+
+  ask turtles with [breed = uppers or breed = middles or breed = lowers][
     rate
   ]
+
 
   tick
 end
@@ -147,12 +158,49 @@ end
 
 
 ;; REGLAS DE TRANSICION
+to aumentar-densidad-poblacional [tasa]
+  set densidadPoblacional densidadPoblacional * (1 + tasa)
+end
+
+to aumentar-ingreso-promedio [tasa]
+  set ingresoPromedio ingresoPromedio * (1 + tasa)
+end
+
+to reproducir
+  let cordx pxcor
+  let cordy pycor
+  if  count lowers-on neighbors >= 3
+  [ ;;    if  count lowers in-radius 1 >= 2[    otra manera pra tener en cuenta
+    ask one-of lowers-on neighbors [
+      hatch 1[
+        setxy cordx cordy
+      ]
+    ]
+  ]
+  if  count middles-on neighbors >= 3[
+    ask one-of middles-on neighbors[
+      hatch 1[
+        setxy cordx cordy
+      ]
+    ]
+  ]
+  if  count uppers-on neighbors > 3[
+    ask one-of uppers-on neighbors[
+      hatch 1[
+        setxy cordx cordy
+      ]
+    ]
+  ]
+end
+
+
 to rate
   let score calc-score
-  ifelse score <= 35
+
+  ifelse score <= 18
   [set breed lowers
    set color red]
-  [ifelse score <= 45
+  [ifelse score <= 25
     [set breed middles
      set color orange]
     [set breed uppers
@@ -162,18 +210,17 @@ to rate
 end
 
 to-report calc-score
-  let score 10 - densidadPoblacional + (ingresoPromedio / maxIngreso * 10) + accesoServicios + accesoSalud
+  let score 10 - densidadPoblacional  + accesoServicios + accesoSalud
+  let densidadAux densidadPoblacional
 
-  let cordx xcor
-  let cordy ycor
   ask turtles in-radius 8 with [breed = hospitals] [
-      set score score + 5
+      set score score + (10 / densidadAux)
     ]
-  ask turtles in-radius 5 with [breed = schools] [
-     set score score + 5
+  ask turtles in-radius 6 with [breed = schools] [
+     set score score + (10 / densidadAux)
    ]
-   ask turtles in-radius 3 with [breed = markets] [
-      set score score + 5
+   ask turtles in-radius 4 with [breed = markets] [
+      set score score + (8 / densidadAux)
     ]
   report score
 end
@@ -326,7 +373,7 @@ percentMid
 percentMid
 0
 0.5
-0.5
+0.2
 0.1
 1
 NIL
@@ -354,7 +401,7 @@ MONITOR
 185
 1112
 234
-Red turtles
+Lowers
 count turtles with [ color = red ]
 2
 1
@@ -365,7 +412,7 @@ MONITOR
 186
 1010
 235
-Orange turtles
+Middles
 count turtles with [ color = orange ]
 2
 1
@@ -376,7 +423,7 @@ MONITOR
 186
 904
 235
-Green turtles
+uppers
 count turtles with [ color = green ]
 2
 1
@@ -435,7 +482,7 @@ num-hop
 num-hop
 0
 100
-8.0
+9.0
 1
 1
 NIL
@@ -450,7 +497,7 @@ num-sch
 num-sch
 0
 100
-7.0
+14.0
 1
 1
 NIL
@@ -465,7 +512,7 @@ num-mkt
 num-mkt
 0
 100
-6.0
+15.0
 1
 1
 NIL
