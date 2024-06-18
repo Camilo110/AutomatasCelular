@@ -1,10 +1,15 @@
-globals [maxIngreso]
-breed [mids mid]
-breed [ups up]
-breed [lows low]
+breed [middles mid]
+breed [uppers up]
+breed [lowers low]
+breed [hospitals hop]
+breed [schools sch]
+breed [markets mkt]
 
-
-
+globals [
+  aux
+  optionColor
+  erasing?                 ;; is the current draw-cells mouse click erasing or adding?
+]
 
 turtles-own [
   ingresoPromedio
@@ -16,9 +21,15 @@ turtles-own [
   AccesoTiendas
 ]
 
+middles-own [
+  isMiddle?
+]
+
+;; inicializacion del mapa aleatorio
 to setup
-  clear-all
   set maxIngreso max-one-of turtles [ingresoPromedio]
+  clear-all
+
   random-services
   create-community
 
@@ -28,6 +39,14 @@ to setup
   reset-ticks
 end
 
+;; Inicializacion del mapa en blanco
+to setup-blank
+  ca
+  set aux 0
+  ask turtles
+    [ cell-void ]
+  reset-ticks
+end
 
 
 to go
@@ -44,11 +63,13 @@ to go
   tick
 end
 
+
 to increment-High
   ask turtles [
     set ingresoPromedio ingresoPromedio * 1.3
   ]
 end
+
 
 to Increment-Medium
 end
@@ -56,92 +77,120 @@ end
 to increment-Low
 end
 
+
 to apply-politic
   ;determinar donde crear un hospital
 end
 
+
 to random-services
-
 end
 
-to rate
-  let score calc-score
-  ifelse score <= 4
-  [set breed lows
-   set color red]
-  [ifelse score <= 7
-    [set breed mids
-     set color orange]
-    [set breed ups
-     set color green]
-  ]
-  set shape  "square"
-end
-
-to-report calc-score
-
-  let score 10 - densidadPoblacional + (ingresoPromedio / maxIngreso)
-
-  ask patches with [pcolor = blue] [
-    let cordx pxcor
-    let cordy pycor
-    ask turtles in-radius 5 [
-      show  distancexy cordx cordy
-    ]
-  ]
-  report score
-end
-
+;; Creacion de los grupos sociales, y cuantos por cada grupo
 to create-community
-
-  create-ups (community * percentMid)
+  create-uppers (community * percentUp)
   [
-    set color green
-    set ingresoPromedio random-float 3 + 7
-    set densidadPoblacional 10 - (random-float 3 + 1)
-    set AccesoSalud random-float 1 + 9
-    set nivelEducativo random-float 2 + 8
+    cell-up
     setxy random-xcor random-ycor
   ]
-  create-mids (community * percentUp)
+  create-middles (community * percentMid)
   [
-    set color orange
-    set ingresoPromedio random-float 4 + 3
-    set densidadPoblacional (random-float 4 + 3)
-    set AccesoSalud random-float 1 + 9
-    set nivelEducativo random-float 3 + 6
-    setxy (min-pxcor + (who - 1)) random-ycor
+    cell-mid
+    setxy random-xcor random-ycor
   ]
-  create-lows (community * (1 - percentUp - percentMid))
+  create-lowers (community * (1 - percentUp - percentMid))
   [
-    set color red
-    set ingresoPromedio random-float 4
-    set densidadPoblacional 10 - (random-float 3 + 7)
-    set AccesoSalud random-float 3 + 4
-    set nivelEducativo random-float 4 + 2
+    cell-low
     setxy random-xcor random-ycor
   ]
   ask turtles [
     set shape "square"
     set size 1
-    setxy round xcor round ycor
+    setxy round xcor round ycor        ;; Ubica celulas por celdas
   ]
 end
+
 
 to-report count-lows
   report turtles with [breed = "low"]
 end
 
+;; INICIALIZACIONES DE LAS CELDAS
+to cell-void
+  set color 0              ;; black:0
+  ;;set kindCell 0
+end
 
-;;;
- ; let n community
- ; let spacing 1 ; adjust the spacing between agents
- ; let xcord n * spacing / 2 ; starting x-coordinate for the first agent
- ; create-lows n [
- ;   setxy xcord 0 ; place the agent at the current x-coordinate and y-coordinate 0
- ;   set xcord xcord + 1 ; update the x-coordinate for the next agent
- ;]
-;;;
+to cell-up
+  set ingresoPromedio random-float 3 + 7
+  set densidadPoblacional 10 - (random-float 3 + 1)
+  set AccesoSalud random-float 1 + 9
+  set nivelEducativo random-float 2 + 8
+  set color 55            ;; green:55
+  set kindCell 1
+end
+
+to cell-mid
+  set ingresoPromedio random-float 4 + 3
+  set densidadPoblacional (random-float 4 + 3)
+  set AccesoSalud random-float 1 + 9
+  set nivelEducativo random-float 3 + 6
+  set color 25             ;; orange:25
+  set kindCell 2
+end
+
+
+to cell-low
+  set ingresoPromedio random-float 4
+  set densidadPoblacional 10 - (random-float 3 + 7)
+  set AccesoSalud random-float 3 + 4
+  set nivelEducativo random-float 4 + 2
+  set color 15             ;; red:15
+  set kindCell 3
+end
+
+to cell-hop
+  set color 105            ;; blue:105
+  set kindCell 4
+end
+
+to cell-sch
+  set color 45             ;; yellow:45
+  set kindCell 5
+end
+
+to cell-mkt
+  set color 135             ;; pink:135
+  set kindCell 6
+end
+
+;;
+to draw-cells [target-color]
+
+  ifelse mouse-down?[
+    ifelse (any? turtles-on patch mouse-xcor mouse-ycor)[
+      show "borre"]
+    [
+          create-turtles 1 [
+            set color 25             ;; orange:                          ;;set kindCell 2
+            set shape "square"
+            set xcor round mouse-xcor
+            set ycor round mouse-ycor
+          ]
+    display
+    ]
+  ][
+    set aux 0
+  ]
+end
+
+;; Selccionamos el color
+to seleccolor
+  set optionColor opcolor  ;; declaramos el color que vamos a dibujar
+  draw-cells optionColor  ;; enviamos el color a usar
+end
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -179,7 +228,7 @@ community
 community
 50
 300
-50.0
+170.0
 10
 1
 NIL
@@ -188,7 +237,7 @@ HORIZONTAL
 BUTTON
 0
 141
-63
+76
 174
 NIL
 setup
@@ -203,10 +252,10 @@ NIL
 1
 
 PLOT
-873
-37
-1073
-187
+645
+10
+918
+172
 populations
 time
 pop
@@ -223,9 +272,9 @@ PENS
 "lows" 1.0 0 -2674135 true "" "plot count lows"
 
 BUTTON
-62
+73
 141
-136
+151
 174
 go-once
 go
@@ -241,11 +290,26 @@ NIL
 
 SLIDER
 17
-66
+94
 189
-99
+127
 percentUp
 percentUp
+0
+0.5
+0.4
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+60
+188
+93
+percentMid
+percentMid
 0
 0.5
 0.2
@@ -254,28 +318,90 @@ percentUp
 NIL
 HORIZONTAL
 
-SLIDER
-17
-100
-189
-133
-percentMid
-percentMid
-0
-0.5
-0.3
-0.1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-136
+150
 141
 210
 174
 go
 go\n
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+1
+387
+102
+436
+Red turtles
+count turtles with [ color = red ]
+2
+1
+12
+
+MONITOR
+0
+331
+104
+380
+Orange turtles
+count turtles with [ color = orange ]
+2
+1
+12
+
+MONITOR
+0
+277
+105
+326
+Green turtles
+count turtles with [ color = green ]
+2
+1
+12
+
+CHOOSER
+0
+208
+208
+253
+opcolor
+opcolor
+55 25 15 105 45 135
+0
+
+BUTTON
+0
+174
+75
+207
+NIL
+setup-blank
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+72
+174
+152
+207
+draw cell
+seleccolor
 T
 1
 T
