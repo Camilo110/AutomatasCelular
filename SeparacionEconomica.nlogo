@@ -1,7 +1,25 @@
-breed [mids mid]
-breed [ups up]
-breed [lows low]
+breed [middles mid]
+breed [uppers up]
+breed [lowers low]
+breed [hospitals hop]
+breed [schools sch]
+breed [markets mkt]
 
+globals [
+  optionColor
+  erasing?                 ;; is the current draw-cells mouse click erasing or adding?
+]
+
+turtles-own [
+  ;; tipo de celda
+  kindCell                 ;; 0:void  1:up  2:mid  3:low  4:hop  5:sch  6:mkt
+]
+
+middles-own [
+  isMiddle?
+]
+
+;; inicializacion del mapa aleatorio
 to setup
   clear-all
   random-services
@@ -9,6 +27,13 @@ to setup
   reset-ticks
 end
 
+;; Inicializacion del mapa en blanco
+to setup-blank
+  ca
+  ask turtles
+    [ cell-void ]
+  reset-ticks
+end
 
 
 to go
@@ -19,8 +44,10 @@ to go
   tick
 end
 
+
 to increment-High
 end
+
 
 to Increment-Medium
 end
@@ -28,40 +55,118 @@ end
 to increment-Low
 end
 
+
 to apply-politic
   ;determinar donde crear un hospital
 end
 
-to random-services
 
+to random-services
 end
 
+;; Creacion de los grupos sociales, y cuantos por cada grupo
 to create-community
-  create-mids (community * percentUp)
+  create-uppers (community * percentUp)
   [
-    set color orange
+    cell-up
     setxy random-xcor random-ycor
   ]
-  create-ups (community * percentMid)
+  create-middles (community * percentMid)
   [
-    set color green
+    cell-mid
     setxy random-xcor random-ycor
   ]
-  create-lows (community * (1 - percentUp - percentMid))
+  create-lowers (community * (1 - percentUp - percentMid))
   [
-    set color red
+    cell-low
     setxy random-xcor random-ycor
   ]
   ask turtles [
     set shape "square"
     set size 1
-    setxy round xcor round ycor
+    setxy round xcor round ycor        ;; Ubica celulas por celdas
   ]
 end
+
 
 to-report count-lows
   report turtles with [breed = "low"]
 end
+
+;; INICIALIZACIONES DE LAS CELDAS
+to cell-void
+  set color 0              ;; black:0
+  ;;set kindCell 0
+end
+
+to cell-up
+  set color 55            ;; green:55
+  set kindCell 1
+end
+
+to cell-mid
+  set color 25             ;; orange:25
+  set kindCell 2
+end
+
+
+to cell-low
+  set color 15             ;; red:15
+  set kindCell 3
+end
+
+to cell-hop
+  set color 105            ;; blue:105
+  set kindCell 4
+end
+
+to cell-sch
+  set color 45             ;; yellow:45
+  set kindCell 5
+end
+
+to cell-mkt
+  set color 135             ;; pink:135
+  set kindCell 6
+end
+
+;;
+to draw-cells [target-color]
+  ifelse mouse-down? [
+    if erasing? = 0 [
+      set erasing? target-color = [pcolor] of patch mouse-xcor mouse-ycor
+    ]
+    ask turtles mouse-xcor mouse-ycor [
+      ifelse erasing? [
+        cell-void
+      ] [
+        ifelse optionColor = white [
+          cell-mid
+        ] [
+          create-uppers 1 [
+            set color 25             ;; orange:25
+                                     ;;set kindCell 2
+            set shape "square"
+            set xcor round mouse-xcor
+            set ycor round mouse-ycor
+          ]
+        ]
+      ]
+    ]
+    display
+  ][
+    set erasing? 0
+  ]
+end
+
+;; Selccionamos el color
+to seleccolor
+  set optionColor opcolor  ;; declaramos el color que vamos a dibujar
+  draw-cells optionColor  ;; enviamos el color a usar
+end
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -99,7 +204,7 @@ community
 community
 50
 300
-50.0
+170.0
 10
 1
 NIL
@@ -108,7 +213,7 @@ HORIZONTAL
 BUTTON
 0
 141
-63
+76
 174
 NIL
 setup
@@ -123,10 +228,10 @@ NIL
 1
 
 PLOT
-873
-37
-1073
-187
+645
+10
+918
+172
 populations
 time
 pop
@@ -143,9 +248,9 @@ PENS
 "lows" 1.0 0 -2674135 true "" "plot count lows"
 
 BUTTON
-62
+73
 141
-136
+151
 174
 go-once
 go
@@ -161,11 +266,26 @@ NIL
 
 SLIDER
 17
-66
+94
 189
-99
+127
 percentUp
 percentUp
+0
+0.5
+0.4
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+60
+188
+93
+percentMid
+percentMid
 0
 0.5
 0.2
@@ -174,28 +294,90 @@ percentUp
 NIL
 HORIZONTAL
 
-SLIDER
-17
-100
-189
-133
-percentMid
-percentMid
-0
-0.5
-0.3
-0.1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-136
+150
 141
 210
 174
 go
 go\n
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+1
+387
+102
+436
+Red turtles
+count turtles with [ color = red ]
+2
+1
+12
+
+MONITOR
+0
+331
+104
+380
+Orange turtles
+count turtles with [ color = orange ]
+2
+1
+12
+
+MONITOR
+0
+277
+105
+326
+Green turtles
+count turtles with [ color = green ]
+2
+1
+12
+
+CHOOSER
+0
+208
+208
+253
+opcolor
+opcolor
+55 25 15 105 45 135
+0
+
+BUTTON
+0
+174
+75
+207
+NIL
+setup-blank
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+72
+174
+152
+207
+draw cell
+seleccolor
 T
 1
 T
