@@ -6,7 +6,7 @@ breed [schools sch]
 breed [markets mkt]
 
 globals [
-  aux
+  maxIngreso
   optionColor
   erasing?                 ;; is the current draw-cells mouse click erasing or adding?
 ]
@@ -27,11 +27,12 @@ middles-own [
 
 ;; inicializacion del mapa aleatorio
 to setup
-  set maxIngreso max-one-of turtles [ingresoPromedio]
+
   clear-all
 
   random-services
   create-community
+  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
 
   ask n-of 10 patches [
     set pcolor blue]
@@ -42,7 +43,6 @@ end
 ;; Inicializacion del mapa en blanco
 to setup-blank
   ca
-  set aux 0
   ask turtles
     [ cell-void ]
   reset-ticks
@@ -50,7 +50,7 @@ end
 
 
 to go
-  set maxIngreso max-one-of turtles [ingresoPromedio]
+  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
 
   ask turtles [
     rate
@@ -127,7 +127,6 @@ to cell-up
   set AccesoSalud random-float 1 + 9
   set nivelEducativo random-float 2 + 8
   set color 55            ;; green:55
-  set kindCell 1
 end
 
 to cell-mid
@@ -136,7 +135,6 @@ to cell-mid
   set AccesoSalud random-float 1 + 9
   set nivelEducativo random-float 3 + 6
   set color 25             ;; orange:25
-  set kindCell 2
 end
 
 
@@ -146,28 +144,24 @@ to cell-low
   set AccesoSalud random-float 3 + 4
   set nivelEducativo random-float 4 + 2
   set color 15             ;; red:15
-  set kindCell 3
 end
 
 to cell-hop
   set color 105            ;; blue:105
-  set kindCell 4
 end
 
 to cell-sch
   set color 45             ;; yellow:45
-  set kindCell 5
 end
 
 to cell-mkt
   set color 135             ;; pink:135
-  set kindCell 6
 end
 
 ;;
 to draw-cells [target-color]
 
-  ifelse mouse-down?[
+  if mouse-down?[
     ifelse (any? turtles-on patch mouse-xcor mouse-ycor)[
       show "borre"]
     [
@@ -179,9 +173,35 @@ to draw-cells [target-color]
           ]
     display
     ]
-  ][
-    set aux 0
   ]
+end
+
+to rate
+  let score calc-score
+  ifelse score <= 4
+  [set breed lowers
+   set color red]
+  [ifelse score <= 7
+    [set breed middles
+     set color orange]
+    [set breed uppers
+     set color green]
+  ]
+  set shape  "square"
+end
+
+to-report calc-score
+
+  let score 10 - densidadPoblacional + (ingresoPromedio / maxIngreso)
+
+  ask patches with [pcolor = blue] [
+    let cordx pxcor
+    let cordy pycor
+    ask turtles in-radius 5 [
+      show  distancexy cordx cordy
+    ]
+  ]
+  report score
 end
 
 ;; Selccionamos el color
@@ -189,7 +209,6 @@ to seleccolor
   set optionColor opcolor  ;; declaramos el color que vamos a dibujar
   draw-cells optionColor  ;; enviamos el color a usar
 end
-
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -228,7 +247,7 @@ community
 community
 50
 300
-170.0
+50.0
 10
 1
 NIL
