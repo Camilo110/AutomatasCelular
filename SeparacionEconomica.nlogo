@@ -123,7 +123,7 @@ to cell-up
     set AccesoServicios 10
     set nivelEducativo random-float 2 + 8
     set color 55            ;; green:55
-    set shape  "circle"
+    set shape  "square"
 
 end
 
@@ -135,7 +135,7 @@ to cell-mid
   set AccesoServicios random-float 1 + 9
   set nivelEducativo random-float 2 + 6
   set color 25             ;; orange:25
-  set shape  "circle"
+  set shape  "square"
 end
 
 
@@ -147,7 +147,7 @@ to cell-low
   set AccesoServicios random-float 1 + 7
   set nivelEducativo random-float 4 + 2
   set color 15             ;; red:15
-  set shape  "circle"
+  set shape  "square"
 end
 
 to cell-hop
@@ -191,6 +191,7 @@ to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear 
   let cordx pxcor
   let cordy pycor
   if  count lowers-on neighbors >= 2  ;; si tieene 2 vecinos lower se crea
+    ;; in-radius 1 es l mismo que decir neighbors
   [ ;;    if  count lowers in-radius 1 >= 2[    otra manera pra tener en cuenta
     ask one-of lowers-on neighbors [
       hatch 1[
@@ -228,13 +229,18 @@ to rate
   let score calc-score
 
   ifelse score <= 18
-  [set breed lowers
-   set color red]
-  [ifelse score <= 25
-    [set breed middles
-     set color orange]
-    [set breed uppers
-     set color green]
+  [
+    set breed lowers
+    set color red
+  ] [
+    ifelse score <= 25
+    [
+      set breed middles
+      set color orange
+    ] [
+      set breed uppers
+      set color green
+    ]
   ]
   set shape  "square"
 end
