@@ -75,15 +75,20 @@ to go
     aumentar-ingreso-promedio
   ]
   ask patches with [not any? turtles-here][
-    reproducir
+    birth
   ]
 
   ask turtles with [breed = uppers or breed = middles or breed = lowers][
+    reproducir
     rate
     die
   ]
-
-   up-to-mid
+  ; degradan
+  up-to-mid
+  mid-to-low
+  ;ascienden
+  low-to-mid
+  mid-to-up
 
   tick
 end
@@ -112,19 +117,19 @@ end
 ;; INICIALIZACIONES DE LAS CELDAS
 to cell-void
   set color 0              ;; black:0
-  ;;set kindCell 0
+                           ;;set kindCell 0
 end
 
 to cell-up
-    set breed uppers
-    set ingresoPromedio random-float 3 + 7
-    set densidadPoblacional (random-float 3 + 1)
-    set AccesoSalud random-float 2 + 8
-    set AccesoServicios 10
-    set nivelEducativo random-float 2 + 8
+  set breed uppers
+  set ingresoPromedio random-float 3 + 7
+  set densidadPoblacional (random-float 3 + 1)
+  set AccesoSalud random-float 2 + 8
+  set AccesoServicios 10
+  set nivelEducativo random-float 2 + 8
     set tasaCrecimientoEconomico 0.001 
-    set color 55            ;; green:55
-    set shape  "square"
+  set color 55            ;; green:55
+  set shape  "square"
 
 end
 
@@ -190,9 +195,37 @@ end
 
 ;; dependiendo de densidad poblacion y si no tienne servicios cerca, deberia de morir
 
+to random-event [
+  let cordx random-xcor
+  let cordy random-ycor
+  if random-float 1 < 0.001 [
+    ask patch cordx cordy [
+      ask turtles in-radius 4 [
+        if [breed = uppers or breed = middles or breed = lowers] [
+          set densidadPoblacional densidadPoblacional / 2
+          set promedioIngreso promedioIngreso / 2
+          set tasaCrecimientoEconomico tasaCrecimientoEconomico / 2
+        ]
+        if [breed = hospitals or breed = schools or breed = markets] [
+          die
+        ]
+      ]
+    ]
+  ]
+]
+end
+
+
 to birth ;;; que crezca teniendo las disponibilidad de servicios ej: crear un low si hay 4 lowers y hay un hospital y una escuela
   let cordx pxcor
   let cordy pycor
+
+  if count turtles in-radius 5 > 15 and not any? schools in-radius 5[
+    crt 1 [
+      cell-sch
+      setxy cordx cordy
+    ]
+  ]
   
   if cond-isNeighbor-up and cond-isHop and isMkt and isSch [
     ask upper in-radius 3 [
@@ -288,14 +321,32 @@ end
 
 ;; Transicion de clases
 
+; degradar de clase, de alta a media si no está cerca de un hospital
 to up-to-mid         ;; regla sustentacion
-  ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
-      cell-mid
+                     ;ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
+  ask uppers with [not cond-isHop] [
+    cell-mid
   ]
 end
 
+; degradar de clase, de media a baja si no está cerca de un hospital y escuela
 to mid-to-low
+  ask middles with [not cond-isHop and not cond-isSch] [
+    cell-low
+  ]
+end
 
+; ascender de clase, de baja a media si está cerca de un hospital y escuela
+to low-to-mid
+  ask lowers with [cond-isHop and cond-isMkt] [
+    cell-low
+  ]
+end
+
+to mid-to-up
+  ask middles with [cond-isHop and cond-isSch and cond-isMkt] [
+    cell-low
+  ]
 end
 
 to die
