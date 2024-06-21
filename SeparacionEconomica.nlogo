@@ -20,10 +20,6 @@ turtles-own [
   AccesoTiendas
 ]
 
-middles-own [
-  isMiddle?
-]
-
 ;; inicializacion del mapa aleatorio
 to setup
 
@@ -44,8 +40,8 @@ to setup
   create-community
 
   ask turtles [
-    set shape "square"
-    set size 1
+    ;;set shape "square"
+    ;;set size 1
     setxy round xcor round ycor        ;; Ubica celulas por celdas
   ]
 
@@ -85,8 +81,7 @@ to go
     rate
   ]
 
-   ejemplo-cambio
-
+   up-to-mid
 
   tick
 end
@@ -156,20 +151,20 @@ end
 to cell-hop
   set breed hospitals
   set color 105            ;; blue:105
-  set shape  "square"
+  set shape  "cross"
 
 end
 
 to cell-sch
   set breed schools
   set color 45             ;; yellow:45
-  set shape  "square"
+  set shape  "house"
 end
 
 to cell-mkt
   set breed markets
   set color 135             ;; pink:135
-  set shape  "square"
+  set shape  "box"
 end
 
 ;; FIN INICIALIZACIONES DE LAS CELDAS
@@ -194,6 +189,7 @@ to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear 
   let cordx pxcor
   let cordy pycor
   if  count lowers-on neighbors >= 2  ;; si tieene 2 vecinos lower se crea
+    ;; in-radius 1 es l mismo que decir neighbors
   [ ;;    if  count lowers in-radius 1 >= 2[    otra manera pra tener en cuenta
     ask one-of lowers-on neighbors [
       hatch 1[
@@ -218,26 +214,67 @@ to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear 
   ]
 end
 
-;; regla sustentacion
-to ejemplo-cambio
-  ask turtles with [breed = uppers and count hospitals in-radius 5 = 0] [
+;; Condicionales para las transiciones
+
+to-report cond-isMkt
+  report any? markets in-radius 4
+end
+
+to-report cond-isHop
+  report any? hospitals in-radius 6
+end
+
+to-report cond-isSch
+  report any? Schools in-radius 5
+end
+
+to-report cond-isNeighbor-up
+  report any? uppers in-radius 3
+end
+
+to-report cond-isNeighbor-mid
+  report any? middles in-radius 2
+end
+
+to-report cond-isNeighbor-low
+  report any? lowers in-radius 2
+end
+
+
+;; Fin de las condicionales para las transiciones
+
+
+
+;; Transicion de clases
+
+to up-to-mid         ;; regla sustentacion
+  ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
       cell-mid
   ]
 end
 
+to mid-to-low
 
+end
+
+;; Fin de transicion de clases
 
 to rate
   let score calc-score
 
   ifelse score <= 18
-  [set breed lowers
-   set color red]
-  [ifelse score <= 25
-    [set breed middles
-     set color orange]
-    [set breed uppers
-     set color green]
+  [
+    set breed lowers
+    set color red
+  ] [
+    ifelse score <= 25
+    [
+      set breed middles
+      set color orange
+    ] [
+      set breed uppers
+      set color green
+    ]
   ]
   set shape  "square"
 end
@@ -270,35 +307,35 @@ to draw-cells
   if mouse-down? [
     ifelse (any? turtles-on patch mouse-xcor mouse-ycor) [
     ] [
-      ifelse optionColor = "orange" [
+      ifelse optionColor = "middle" [
         crt 1 [
           cell-mid
           set xcor round mouse-xcor
           set ycor round mouse-ycor
         ]
       ] [
-        ifelse optionColor = "red" [
+        ifelse optionColor = "lower" [
           crt 1 [
             cell-low
             set xcor round mouse-xcor
             set ycor round mouse-ycor
           ]
         ] [
-          ifelse optionColor = "green" [
+          ifelse optionColor = "upper" [
             crt 1 [
               cell-up
               set xcor round mouse-xcor
               set ycor round mouse-ycor
             ]
           ] [
-            ifelse optionColor = "blue" [
+            ifelse optionColor = "hospital" [
               crt 1 [
                 cell-hop
                 set xcor round mouse-xcor
                 set ycor round mouse-ycor
               ]
             ] [
-              ifelse optionColor = "yellow" [
+              ifelse optionColor = "school" [
                 crt 1 [
                   cell-sch
                   set xcor round mouse-xcor
@@ -334,19 +371,19 @@ end
 GRAPHICS-WINDOW
 210
 10
-590
-391
+776
+577
 -1
 -1
-12.0
+18.0
 1
 10
 1
 1
 1
 0
-1
-1
+0
+0
 1
 -15
 15
@@ -391,9 +428,9 @@ NIL
 1
 
 PLOT
-616
+780
 10
-889
+1053
 172
 populations
 time
@@ -475,10 +512,10 @@ NIL
 1
 
 MONITOR
-811
-183
-912
-232
+965
+176
+1052
+225
 Lowers
 count turtles with [ color = red ]
 2
@@ -486,10 +523,10 @@ count turtles with [ color = red ]
 12
 
 MONITOR
-706
-184
-810
-233
+873
+176
+959
+225
 Middles
 count turtles with [ color = orange ]
 2
@@ -497,11 +534,11 @@ count turtles with [ color = orange ]
 12
 
 MONITOR
-599
-184
-704
-233
-uppers
+780
+176
+866
+225
+Uppers
 count turtles with [ color = green ]
 2
 1
@@ -514,8 +551,8 @@ CHOOSER
 456
 optionColor
 optionColor
-"green" "orange" "red" "blue" "yellow" "pink"
-0
+"upper" "middle" "lower" "hospital" "school" "market"
+4
 
 BUTTON
 29
@@ -560,7 +597,7 @@ num-hop
 num-hop
 0
 100
-22.0
+55.0
 1
 1
 NIL
@@ -575,7 +612,7 @@ num-sch
 num-sch
 0
 100
-18.0
+54.0
 1
 1
 NIL
@@ -706,6 +743,12 @@ false
 Polygon -7500403 true true 200 193 197 249 179 249 177 196 166 187 140 189 93 191 78 179 72 211 49 209 48 181 37 149 25 120 25 89 45 72 103 84 179 75 198 76 252 64 272 81 293 103 285 121 255 121 242 118 224 167
 Polygon -7500403 true true 73 210 86 251 62 249 48 208
 Polygon -7500403 true true 25 114 16 195 9 204 23 213 25 200 39 123
+
+cross
+true
+0
+Rectangle -13345367 true false 105 0 195 300
+Rectangle -13345367 true false 0 105 300 195
 
 cylinder
 false
