@@ -7,7 +7,6 @@ breed [markets mkt]
 
 globals [
   maxIngreso
-  erasing?                 ;; is the current draw-cells mouse click erasing or adding?
 ]
 
 turtles-own [
@@ -219,6 +218,8 @@ end
 
 to reproducir
 
+  ;;show densidadPoblacional
+
   let newX 1
   let newY 1
   ifelse random-float 1 > 0.5 [
@@ -235,16 +236,18 @@ to reproducir
       set newY -1
     ]
   ]
+  set newX newX + xcor
+  set newY newY + ycor
 
   ;; para un celda clase alta si su densidad poblacional mayor a 10 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase alta
   if breed = uppers and densidadPoblacional > 10 and cond-isHop and cond-isMkt and cond-isSch [
     ask uppers in-radius 1 [
       set densidadPoblacional densidadPoblacional / 1.2
     ]
-    if not any? turtles with [xcor = xcor + newX  and ycor = ycor + newY][
+    if not any? turtles-on patch newX newY[
       hatch 1 [
         cell-up
-        setxy xcor + newX   ycor + newY
+        setxy newX newY
       ]
     ]
   ]
@@ -253,10 +256,10 @@ to reproducir
     ask middles in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.3
     ]
-    if not any? turtles with [xcor = xcor + newX  and ycor = ycor + newY][
+   if not any? turtles-on patch newX newY[
       hatch 1 [
         cell-mid
-        setxy xcor + newX   ycor + newY
+        setxy newX newY
       ]
     ]
   ]
@@ -266,10 +269,10 @@ to reproducir
     ask lowers in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    if not any? turtles with [xcor = xcor + newX  and ycor = ycor + newY][
+    if not any? turtles-on patch newX newY[
       hatch 1 [
         cell-low
-        setxy xcor + newX   ycor + newY
+        setxy newX newY
       ]
     ]
   ]
@@ -306,7 +309,7 @@ end
 to rate
   let score calc-score
 
-  ifelse score <= 27
+  ifelse score <= 25
   [
     set breed lowers
     set color red
@@ -347,7 +350,7 @@ to-report calc-score
    ]
 
   if cond-isMkt and cond-isHop and cond-isSch [
-    set tasaCrecimientoEconomico tasaCrecimientoEconomico + 0.00003
+    set tasaCrecimientoEconomico tasaCrecimientoEconomico + 0.00005
   ]
   report score
 end
@@ -445,11 +448,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-776
-577
+828
+529
 -1
 -1
-18.0
+10.0
 1
 10
 1
@@ -459,10 +462,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--15
-15
--15
-15
+-30
+30
+-25
+25
 1
 1
 1
@@ -478,7 +481,7 @@ community
 community
 50
 300
-140.0
+280.0
 10
 1
 NIL
@@ -502,10 +505,10 @@ NIL
 1
 
 PLOT
-780
-10
-1053
-172
+841
+13
+1114
+175
 populations
 time
 pop
@@ -562,7 +565,7 @@ percentMid
 percentMid
 0
 0.5
-0.2
+0.3
 0.1
 1
 NIL
@@ -586,10 +589,10 @@ NIL
 1
 
 MONITOR
-965
-176
-1052
-225
+1026
+179
+1113
+228
 Lowers
 count turtles with [ color = red ]
 2
@@ -597,10 +600,10 @@ count turtles with [ color = red ]
 12
 
 MONITOR
-873
-176
-959
-225
+934
+179
+1020
+228
 Middles
 count turtles with [ color = orange ]
 2
@@ -608,10 +611,10 @@ count turtles with [ color = orange ]
 12
 
 MONITOR
-780
-176
-866
-225
+841
+179
+927
+228
 Uppers
 count turtles with [ color = green ]
 2
@@ -626,7 +629,7 @@ CHOOSER
 optionColor
 optionColor
 "upper" "middle" "lower" "hospital" "school" "market"
-4
+3
 
 BUTTON
 29
@@ -671,7 +674,7 @@ num-hop
 num-hop
 0
 100
-13.0
+59.0
 1
 1
 NIL
@@ -686,7 +689,7 @@ num-sch
 num-sch
 0
 100
-13.0
+61.0
 1
 1
 NIL
@@ -701,11 +704,21 @@ num-mkt
 num-mkt
 0
 100
-13.0
+61.0
 1
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+32
+343
+182
+369
+Puede agregar agentes en cualquier momento
+10
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
