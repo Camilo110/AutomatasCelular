@@ -82,8 +82,12 @@ to go
   ask turtles with [breed = uppers or breed = middles or breed = lowers][
     rate
   ]
-
-   up-to-mid
+  ; degradan
+  up-to-mid
+  mid-to-low
+  ;ascienden
+  low-to-mid
+  mid-to-up
 
   tick
 end
@@ -112,18 +116,18 @@ end
 ;; INICIALIZACIONES DE LAS CELDAS
 to cell-void
   set color 0              ;; black:0
-  ;;set kindCell 0
+                           ;;set kindCell 0
 end
 
 to cell-up
-    set breed uppers
-    set ingresoPromedio random-float 3 + 7
-    set densidadPoblacional (random-float 3 + 1)
-    set AccesoSalud random-float 2 + 8
-    set AccesoServicios 10
-    set nivelEducativo random-float 2 + 8
-    set color 55            ;; green:55
-    set shape  "square"
+  set breed uppers
+  set ingresoPromedio random-float 3 + 7
+  set densidadPoblacional (random-float 3 + 1)
+  set AccesoSalud random-float 2 + 8
+  set AccesoServicios 10
+  set nivelEducativo random-float 2 + 8
+  set color 55            ;; green:55
+  set shape  "square"
 
 end
 
@@ -190,8 +194,8 @@ end
 to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear un low si hay 4 lowers y hay un hospital y una escuela
   let cordx pxcor
   let cordy pycor
-  if  count lowers-on neighbors >= 2  ;; si tieene 2 vecinos lower se crea
-    ;; in-radius 1 es l mismo que decir neighbors
+  if  count lowers-on neighbors >= 2 ;; si tieene 2 vecinos lower se crea
+                                      ;; in-radius 1 es l mismo que decir neighbors
   [ ;;    if  count lowers in-radius 1 >= 2[    otra manera pra tener en cuenta
     ask one-of lowers-on neighbors [
       hatch 1[
@@ -206,7 +210,7 @@ to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear 
       ]
     ]
   ]
-  if  count uppers-on neighbors > 3[
+  if  count uppers-on neighbors > 4[
     ask one-of uppers-on neighbors[
       hatch 1[
         setxy cordx cordy
@@ -231,15 +235,18 @@ to-report cond-isSch
 end
 
 to-report cond-isNeighbor-up
-  report any? uppers in-radius 3
+  let vecis count patches with [any? turtles-here with [breed = uppers]]
+  report vecis = 3
 end
 
 to-report cond-isNeighbor-mid
-  report any? middles in-radius 2
+  let vecis count patches with [any? turtles-here with [breed = uppers]]
+  report vecis = 3
 end
 
 to-report cond-isNeighbor-low
-  report any? lowers in-radius 2
+  let vecis count patches with [any? turtles-here with [breed = uppers]]
+  report vecis = 3
 end
 
 
@@ -249,14 +256,32 @@ end
 
 ;; Transicion de clases
 
+; degradar de clase, de alta a media si no está cerca de un hospital
 to up-to-mid         ;; regla sustentacion
-  ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
-      cell-mid
+                     ;ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
+  ask uppers with [not cond-isHop] [
+    cell-mid
   ]
 end
 
+; degradar de clase, de media a baja si no está cerca de un hospital y escuela
 to mid-to-low
+  ask middles with [not cond-isHop and not cond-isSch] [
+    cell-low
+  ]
+end
 
+; ascender de clase, de baja a media si está cerca de un hospital y escuela
+to low-to-mid
+  ask lowers with [cond-isHop and cond-isMkt] [
+    cell-low
+  ]
+end
+
+to mid-to-up
+  ask middles with [cond-isHop and cond-isSch and cond-isMkt] [
+    cell-low
+  ]
 end
 
 ;; Fin de transicion de clases
@@ -286,14 +311,14 @@ to-report calc-score
   let densidadAux densidadPoblacional
 
   ask turtles in-radius 8 with [breed = hospitals] [
-      set score score + (10 / densidadAux)
-    ]
+    set score score + (10 / densidadAux)
+  ]
   ask turtles in-radius 6 with [breed = schools] [
-     set score score + (10 / densidadAux)
-   ]
-   ask turtles in-radius 4 with [breed = markets] [
-      set score score + (8 / densidadAux)
-    ]
+    set score score + (10 / densidadAux)
+  ]
+  ask turtles in-radius 4 with [breed = markets] [
+    set score score + (8 / densidadAux)
+  ]
   report score
 end
 ;; FIN REGLAS DE TRANSICION
@@ -490,7 +515,7 @@ percentMid
 percentMid
 0
 0.5
-0.2
+0.3
 0.1
 1
 NIL
@@ -599,7 +624,7 @@ num-hop
 num-hop
 0
 100
-55.0
+15.0
 1
 1
 NIL
