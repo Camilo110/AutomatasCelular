@@ -20,10 +20,6 @@ turtles-own [
   AccesoTiendas
 ]
 
-middles-own [
-  isMiddle?
-]
-
 ;; inicializacion del mapa aleatorio
 to setup
 
@@ -44,8 +40,8 @@ to setup
   create-community
 
   ask turtles [
-    set shape "square"
-    set size 1
+    ;;set shape "square"
+    ;;set size 1
     setxy round xcor round ycor        ;; Ubica celulas por celdas
   ]
 
@@ -79,8 +75,6 @@ to go
   ]
   set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
 
-
-
   ask patches with [not any? turtles-here][
     reproducir
   ]
@@ -90,7 +84,6 @@ to go
   ]
 
    ejemplo-cambio
-
 
   tick
 end
@@ -130,7 +123,7 @@ to cell-up
     set AccesoServicios 10
     set nivelEducativo random-float 2 + 8
     set color 55            ;; green:55
-    set shape  "square"
+    set shape  "circle"
 
 end
 
@@ -142,7 +135,7 @@ to cell-mid
   set AccesoServicios random-float 1 + 9
   set nivelEducativo random-float 2 + 6
   set color 25             ;; orange:25
-  set shape  "square"
+  set shape  "circle"
 end
 
 
@@ -154,26 +147,26 @@ to cell-low
   set AccesoServicios random-float 1 + 7
   set nivelEducativo random-float 4 + 2
   set color 15             ;; red:15
-  set shape  "square"
+  set shape  "circle"
 end
 
 to cell-hop
   set breed hospitals
   set color 105            ;; blue:105
-  set shape  "square"
+  set shape  "cross"
 
 end
 
 to cell-sch
   set breed schools
   set color 45             ;; yellow:45
-  set shape  "square"
+  set shape  "house"
 end
 
 to cell-mkt
   set breed markets
   set color 135             ;; pink:135
-  set shape  "square"
+  set shape  "box"
 end
 
 ;; FIN INICIALIZACIONES DE LAS CELDAS
@@ -274,35 +267,35 @@ to draw-cells
   if mouse-down? [
     ifelse (any? turtles-on patch mouse-xcor mouse-ycor) [
     ] [
-      ifelse optionColor = "orange" [
+      ifelse optionColor = "middle" [
         crt 1 [
           cell-mid
           set xcor round mouse-xcor
           set ycor round mouse-ycor
         ]
       ] [
-        ifelse optionColor = "red" [
+        ifelse optionColor = "lower" [
           crt 1 [
             cell-low
             set xcor round mouse-xcor
             set ycor round mouse-ycor
           ]
         ] [
-          ifelse optionColor = "green" [
+          ifelse optionColor = "upper" [
             crt 1 [
               cell-up
               set xcor round mouse-xcor
               set ycor round mouse-ycor
             ]
           ] [
-            ifelse optionColor = "blue" [
+            ifelse optionColor = "hospital" [
               crt 1 [
                 cell-hop
                 set xcor round mouse-xcor
                 set ycor round mouse-ycor
               ]
             ] [
-              ifelse optionColor = "yellow" [
+              ifelse optionColor = "school" [
                 crt 1 [
                   cell-sch
                   set xcor round mouse-xcor
@@ -338,11 +331,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-590
-391
+776
+577
 -1
 -1
-12.0
+18.0
 1
 10
 1
@@ -395,9 +388,9 @@ NIL
 1
 
 PLOT
-616
+780
 10
-889
+1053
 172
 populations
 time
@@ -479,10 +472,10 @@ NIL
 1
 
 MONITOR
-811
-183
-912
-232
+965
+176
+1052
+225
 Lowers
 count turtles with [ color = red ]
 2
@@ -490,10 +483,10 @@ count turtles with [ color = red ]
 12
 
 MONITOR
-706
-184
-810
-233
+873
+176
+959
+225
 Middles
 count turtles with [ color = orange ]
 2
@@ -501,11 +494,11 @@ count turtles with [ color = orange ]
 12
 
 MONITOR
-599
-184
-704
-233
-uppers
+780
+176
+866
+225
+Uppers
 count turtles with [ color = green ]
 2
 1
@@ -518,8 +511,8 @@ CHOOSER
 456
 optionColor
 optionColor
-"green" "orange" "red" "blue" "yellow" "pink"
-0
+"upper" "middle" "lower" "hospital" "school" "market"
+4
 
 BUTTON
 29
@@ -564,7 +557,7 @@ num-hop
 num-hop
 0
 100
-22.0
+55.0
 1
 1
 NIL
@@ -579,7 +572,7 @@ num-sch
 num-sch
 0
 100
-18.0
+54.0
 1
 1
 NIL
@@ -710,6 +703,12 @@ false
 Polygon -7500403 true true 200 193 197 249 179 249 177 196 166 187 140 189 93 191 78 179 72 211 49 209 48 181 37 149 25 120 25 89 45 72 103 84 179 75 198 76 252 64 272 81 293 103 285 121 255 121 242 118 224 167
 Polygon -7500403 true true 73 210 86 251 62 249 48 208
 Polygon -7500403 true true 25 114 16 195 9 204 23 213 25 200 39 123
+
+cross
+true
+0
+Rectangle -13345367 true false 105 0 195 300
+Rectangle -13345367 true false 0 105 300 195
 
 cylinder
 false
