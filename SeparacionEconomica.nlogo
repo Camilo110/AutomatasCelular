@@ -218,7 +218,7 @@ end
 
 ;; regla sustentacion
 to ejemplo-cambio
-  ask turtles with [breed = uppers and count hospitals in-radius 5 = 0] [
+  ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
       cell-mid
   ]
 end
