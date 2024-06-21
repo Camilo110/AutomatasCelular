@@ -83,7 +83,7 @@ to go
     rate
   ]
 
-   ejemplo-cambio
+   up-to-mid
 
   tick
 end
@@ -216,14 +216,50 @@ to reproducir ;;; que crezca teniendo las disponibilidad de servicios ej: crear 
   ]
 end
 
-;; regla sustentacion
-to ejemplo-cambio
+;; Condicionales para las transiciones
+
+to-report cond-isMkt
+  report any? markets in-radius 4
+end
+
+to-report cond-isHop
+  report any? hospitals in-radius 6
+end
+
+to-report cond-isSch
+  report any? Schools in-radius 5
+end
+
+to-report cond-isNeighbor-up
+  report any? uppers in-radius 3
+end
+
+to-report cond-isNeighbor-mid
+  report any? middles in-radius 2
+end
+
+to-report cond-isNeighbor-low
+  report any? lowers in-radius 2
+end
+
+
+;; Fin de las condicionales para las transiciones
+
+
+
+;; Transicion de clases
+
+to up-to-mid         ;; regla sustentacion
   ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
       cell-mid
   ]
 end
 
+to mid-to-low
 
+end
+
+;; Fin de transicion de clases
 
 to rate
   let score calc-score
