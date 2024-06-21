@@ -66,21 +66,17 @@ end
 
 to go
   ask uppers [
-    aumentar-densidad-poblacional 0.0005
-    aumentar-ingreso-promedio 0.0001
+    aumentar-densidad-poblacional 0.0002
+    aumentar-ingreso-promedio 0.0008
   ]
   ask middles [
     aumentar-densidad-poblacional 0.0005
-    aumentar-ingreso-promedio 0.0001
+    aumentar-ingreso-promedio 0.0005
   ]
   ask lowers [
-    aumentar-densidad-poblacional 0.0005
+    aumentar-densidad-poblacional 0.0008
     aumentar-ingreso-promedio 0.0001
   ]
-  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
-
-
-
   ask patches with [not any? turtles-here][
     reproducir
   ]
@@ -251,13 +247,13 @@ to-report calc-score
   let densidadAux densidadPoblacional
 
   ask turtles in-radius 8 with [breed = hospitals] [
-      set score score + (10 / densidadAux)
+      set score score + 10
     ]
   ask turtles in-radius 6 with [breed = schools] [
-     set score score + (10 / densidadAux)
+     set score score + 10
    ]
    ask turtles in-radius 4 with [breed = markets] [
-      set score score + (8 / densidadAux)
+      set score score + 8
     ]
   report score
 end
