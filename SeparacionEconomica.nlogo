@@ -15,9 +15,6 @@ turtles-own [
   densidadPoblacional
   nivelEducativo
   AccesoServicios
-  AccesoSalud
-  AccesoEducacion
-  AccesoTiendas
   tasaCrecimientoEconomico
 ]
 
@@ -41,27 +38,22 @@ to setup
   create-community
 
   ask turtles [
-    ;;set shape "square"
-    ;;set size 1
     setxy round xcor round ycor        ;; Ubica celulas por celdas
   ]
-
-  set maxIngreso [ingresoPromedio] of max-one-of turtles [ingresoPromedio]
-
 
   reset-ticks
 end
 
 ;; Inicializacion del mapa en blanco
 to setup-blank
-  ca
-  ask turtles
-    [ cell-void ]
+  clear-all
   reset-ticks
 end
 
 
 to go
+
+  ;; aumenta la densidad poblacional y el ingreso promedio según un tasa de crecimiento
   ask uppers [
     aumentar-densidad-poblacional 0.0004
     aumentar-ingreso-promedio
@@ -74,21 +66,25 @@ to go
     aumentar-densidad-poblacional 0.001
     aumentar-ingreso-promedio
   ]
-  ask patches with [not any? turtles-here][
-    birth
-  ]
 
-  ask turtles with [breed = uppers or breed = middles or breed = lowers][
-    reproducir
-    rate
-    die
-  ]
+  ;; crear nuevos agentes en la celdas vacias
   ; degradan
   up-to-mid
   mid-to-low
   ;ascienden
   low-to-mid
   mid-to-up
+
+  ask patches with [not any? turtles-here][
+    birth
+  ]
+
+  ;; aplicar metodos de reproduccion, calificacion y muerte a todas los vencidarios
+  ask turtles with [breed = uppers or breed = middles or breed = lowers][
+    reproducir
+    rate
+    turtle-die
+  ]
 
   tick
 end
@@ -113,51 +109,41 @@ to create-community
   ]
 end
 
-
-;; INICIALIZACIONES DE LAS CELDAS
-to cell-void
-  set color 0              ;; black:0
-                           ;;set kindCell 0
-end
-
+;; crea una celda de clase alta
 to cell-up
   set breed uppers
-  set ingresoPromedio random-float 3 + 7
-  set densidadPoblacional (random-float 3 + 1)
-  set AccesoSalud random-float 2 + 8
+  set ingresoPromedio random-float 1 + 6
+  set densidadPoblacional (random-float 4 + 6)
   set AccesoServicios 10
-  set nivelEducativo random-float 2 + 8
-    set tasaCrecimientoEconomico 0.001 
+  set tasaCrecimientoEconomico 0.001
   set color 55            ;; green:55
   set shape  "square"
 
 end
 
+;; crea una celda de clase media
 to cell-mid
   set breed middles
-  set ingresoPromedio random-float 4 + 3
-  set densidadPoblacional (random-float 4 + 3)
-  set AccesoSalud random-float 3 + 5
+  set ingresoPromedio random-float 2 + 3
+  set densidadPoblacional (random-float 5 + 10)
   set AccesoServicios random-float 1 + 9
-  set nivelEducativo random-float 2 + 6
   set tasaCrecimientoEconomico 0.0005
   set color 25             ;; orange:25
   set shape  "square"
 end
 
-
+;; crea una celda de clase baja
 to cell-low
   set breed lowers
-  set ingresoPromedio random-float 4
-  set densidadPoblacional (random-float 3 + 7)
-  set AccesoSalud random-float 3 + 3
+  set ingresoPromedio random-float 1 + 1
+  set densidadPoblacional (random-float 5 + 15)
   set AccesoServicios random-float 1 + 7
-  set nivelEducativo random-float 4 + 2
   set tasaCrecimientoEconomico 0.0001
   set color 15             ;; red:15
   set shape  "square"
 end
 
+;; crea una celda de tipo hopital
 to cell-hop
   set breed hospitals
   set color 105            ;; blue:105
@@ -165,12 +151,14 @@ to cell-hop
 
 end
 
+;; crea una celda de tipo escuela
 to cell-sch
   set breed schools
   set color 45             ;; yellow:45
   set shape  "house"
 end
 
+;; crea una celda de tipo tienda
 to cell-mkt
   set breed markets
   set color 135             ;; pink:135
@@ -189,69 +177,67 @@ to aumentar-ingreso-promedio
   set ingresoPromedio ingresoPromedio * (1 + tasaCrecimientoEconomico)
 end
 
-; definir como se crean los hospital y tiendas y demás
-
-; depedniedo de un rango de densidad poblacional se cree otra celda al lado y se le reduzca a la mitad
-
-;; dependiendo de densidad poblacion y si no tienne servicios cerca, deberia de morir
-
-to random-event [
+;; evento aleatorio que afecta 4 filas al rededor
+to random-event
   let cordx random-xcor
   let cordy random-ycor
-  if random-float 1 < 0.001 [
+  if random-float 1 < 0.01 [
     ask patch cordx cordy [
       ask turtles in-radius 4 [
-        if [breed = uppers or breed = middles or breed = lowers] [
+        if breed = uppers or breed = middles or breed = lowers [
           set densidadPoblacional densidadPoblacional / 2
-          set promedioIngreso promedioIngreso / 2
+          set ingresoPromedio ingresoPromedio / 2
           set tasaCrecimientoEconomico tasaCrecimientoEconomico / 2
         ]
-        if [breed = hospitals or breed = schools or breed = markets] [
+        if breed = hospitals or breed = schools or breed = markets [
           die
         ]
       ]
     ]
   ]
-]
 end
 
 
-to birth ;;; que crezca teniendo las disponibilidad de servicios ej: crear un low si hay 4 lowers y hay un hospital y una escuela
+to birth
   let cordx pxcor
   let cordy pycor
 
+  ;; si existen 15 celdas se crea una escuela
   if count turtles in-radius 5 > 15 and not any? schools in-radius 5[
-    crt 1 [
+    sprout 1 [
       cell-sch
       setxy cordx cordy
     ]
   ]
-  
-  if cond-isNeighbor-up and cond-isHop and isMkt and isSch [
-    ask upper in-radius 3 [
+
+  ;; si existen 3 vecinos de clase alta y hay disponibilidad de servicios se crea una nueva celda clase alta
+  if cond-isNeighbor-up and cond-isHop and cond-isMkt and cond-isSch [
+    ask uppers in-radius 3 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    crt 1 [
+    sprout 1 [
       cell-up
       setxy cordx  cordy
     ]
   ]
 
-  if cond-isNeighbor-middle and cond-isHop and isMkt and isSch [
-    ask middle in-radius 2 [
+  ;; si existen 2 vecinos de clase media y hay disponibilidad de servicios se crea una nueva celda clase media
+  if cond-isNeighbor-mid and cond-isHop and cond-isMkt and cond-isSch [
+    ask middles in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    crt 1 [
+    sprout 1 [
       cell-mid
       setxy cordx cordy
     ]
   ]
 
-  if cond-isNeighbor-low and cond-isHop and isSch [
-    ask lower in-radius 2 [
+  ;; si existen 2 vecinos de clase baja y hay disponibilidad de servicios se crea una nueva celda clase baja
+  if cond-isNeighbor-low and cond-isHop and cond-isSch [
+    ask lowers in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    crt 1 [
+    sprout 1 [
       cell-low
       setxy cordx cordy
     ]
@@ -259,71 +245,50 @@ to birth ;;; que crezca teniendo las disponibilidad de servicios ej: crear un lo
 end
 
 to reproducir
-  if breed = uppers and densidadPoblacional > 10 and cond-isHop and isMkt and isSch [
+
+  ;; para un celda clase alta si su densidad poblacional mayor a 10 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase alta
+  if breed = uppers and densidadPoblacional > 10 and cond-isHop and cond-isMkt and cond-isSch [
     ask uppers in-radius 3 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    crt 1 [
-      cell-up
-      setxy xcor + 1 ycor + 1
+    if not any? turtles with [xcor = xcor + 1  and ycor = ycor + 1][
+      hatch 1 [
+        cell-up
+        setxy xcor + 1 ycor + 1
+      ]
     ]
   ]
-  if breed = middles and densidadPoblacional > 15 and cond-isHop and isMkt and isSch [
+  ;; para un celda clase media si su densidad poblacional mayor a 15 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase media
+  if breed = middles and densidadPoblacional > 15 and cond-isHop and cond-isMkt and cond-isSch [
     ask middles in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    crt 1 [
-      cell-mid
-      setxy xcor + 1 ycor + 1
+    if not any? turtles with [xcor = xcor + 1  and ycor = ycor + 1][
+      hatch 1 [
+        cell-mid
+        setxy xcor + 1 ycor + 1
+      ]
     ]
   ]
-  if breed = lowers and densidadPoblacional > 20 and cond-isHop and isMkt and isSch [
+
+  ;; para un celda clase baja si su densidad poblacional mayor a 20 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase baja
+  if breed = lowers and densidadPoblacional > 20 and cond-isHop and cond-isMkt and cond-isSch [
     ask lowers in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    crt 1 [
-      cell-low
-      setxy xcor + 1 ycor + 1
+    if not any? turtles with [xcor = xcor + 1  and ycor = ycor + 1][
+      hatch 1 [
+        cell-low
+        setxy xcor + 1 ycor + 1
+      ]
     ]
-  ] 
+  ]
 end
-
-;; Condicionales para las transiciones
-
-to-report cond-isMkt
-  report any? markets in-radius 4
-end
-
-to-report cond-isHop
-  report any? hospitals in-radius 6
-end
-
-to-report cond-isSch
-  report any? Schools in-radius 5
-end
-
-to-report cond-isNeighbor-up
-  report any? uppers in-radius 3
-end
-
-to-report cond-isNeighbor-mid
-  report any? middles in-radius 2
-end
-
-to-report cond-isNeighbor-low
-  report any? lowers in-radius 2
-end
-
-
-;; Fin de las condicionales para las transiciones
-
 
 
 ;; Transicion de clases
-
 ; degradar de clase, de alta a media si no está cerca de un hospital
 to up-to-mid         ;; regla sustentacion
-                     ;ask turtles with [breed = uppers and count hospitals in-radius 6 = 0] [
   ask uppers with [not cond-isHop] [
     cell-mid
   ]
@@ -349,7 +314,8 @@ to mid-to-up
   ]
 end
 
-to die
+;; Una vencidad muere si tiene una densidad poblacional mayor a 20 y no hay hospitales
+to turtle-die
   if densidadPoblacional > 20 and not(cond-isHop) [
     die
   ]
@@ -357,15 +323,16 @@ end
 
 ;; Fin de transicion de clases
 
+;; INICIO CLASIFICACION POR SCORE
 to rate
   let score calc-score
 
-  ifelse score <= 18
+  ifelse score <= 22
   [
     set breed lowers
     set color red
   ] [
-    ifelse score <= 25
+    ifelse score <= 35
     [
       set breed middles
       set color orange
@@ -378,9 +345,10 @@ to rate
 end
 
 to-report calc-score
-  let score 10 - densidadPoblacional  + accesoServicios + accesoSalud
+  let score 10 - 0.32 * densidadPoblacional  + ingresoPromedio + accesoServicios
   let densidadAux densidadPoblacional
 
+  ;; si no hay hospitales o escuelas cerca se reduce la tasa de crecimiento economico
   if not(cond-isHop) [
     set tasaCrecimientoEconomico tasaCrecimientoEconomico - 0.00005
   ]
@@ -388,18 +356,20 @@ to-report calc-score
     set tasaCrecimientoEconomico tasaCrecimientoEconomico - 0.00005
   ]
 
-
-
   if cond-isMkt [
-    set score score + 8
+    set score score + 3
   ]
 
-  ask turtles in-radius 8 with [breed = hospitals] [
-      set score score + 10
+  if cond-isHop [
+      set score score + 6
     ]
-  ask turtles in-radius 6 with [breed = schools] [
-     set score score + 10
+  if cond-isSch[
+     set score score + 5
    ]
+
+  if cond-isMkt and cond-isHop and cond-isSch [
+    set tasaCrecimientoEconomico tasaCrecimientoEconomico - 0.00003
+  ]
   report score
 end
 ;; FIN REGLAS DE TRANSICION
@@ -407,8 +377,6 @@ end
 
 
 ;; DIBUJAR CELDA MEDIANTE CLICK
-;; Selccionamos el color
-
 
 to draw-cells
 
@@ -465,10 +433,37 @@ to draw-cells
   ]
 end
 
+;; FIN DIBUJAR CELDA MEDIANTE CLICK
 
+
+;;INICIO UTILS
+;; Condicionales para las transiciones
+
+to-report cond-isMkt
+  report any? markets in-radius 4
 end
 
-;; FIN DIBUJAR CELDA MEDIANTE CLICK
+to-report cond-isHop
+  report any? hospitals in-radius 5
+end
+
+to-report cond-isSch
+  report any? Schools in-radius 3
+end
+
+to-report cond-isNeighbor-up
+  report any? uppers in-radius 3
+end
+
+to-report cond-isNeighbor-mid
+  report any? middles in-radius 2
+end
+
+to-report cond-isNeighbor-low
+  report any? lowers in-radius 2
+end
+
+;;FIN UTILS
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -484,8 +479,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-0
-0
+1
+1
 1
 -15
 15
