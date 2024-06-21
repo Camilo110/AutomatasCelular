@@ -71,12 +71,8 @@ to go
   ; degradan
   up-to-mid
   mid-to-low
-  ;ascienden
-  low-to-mid
-  mid-to-up
-
   ask patches with [not any? turtles-here][
-    birth
+
   ]
 
   ;; aplicar metodos de reproduccion, calificacion y muerte a todas los vencidarios
@@ -96,16 +92,25 @@ to create-community
   [
     cell-up
     setxy random-xcor random-ycor
+    while [any? other turtles-here] [
+      setxy random-xcor random-ycor
+    ]
   ]
   create-turtles (community * percentMid)
   [
     cell-mid
     setxy random-xcor random-ycor
+    while [any? other turtles-here] [
+      setxy random-xcor random-ycor
+    ]
   ]
   create-turtles (community * (1 - percentUp - percentMid))
   [
     cell-low
     setxy random-xcor random-ycor
+    while [any? other turtles-here] [
+      setxy random-xcor random-ycor
+    ]
   ]
 end
 
@@ -210,76 +215,61 @@ to birth
     ]
   ]
 
-  ;; si existen 3 vecinos de clase alta y hay disponibilidad de servicios se crea una nueva celda clase alta
-  if cond-isNeighbor-up and cond-isHop and cond-isMkt and cond-isSch [
-    ask uppers in-radius 3 [
-      set densidadPoblacional densidadPoblacional / 1.4
-    ]
-    sprout 1 [
-      cell-up
-      setxy cordx  cordy
-    ]
-  ]
-
-  ;; si existen 2 vecinos de clase media y hay disponibilidad de servicios se crea una nueva celda clase media
-  if cond-isNeighbor-mid and cond-isHop and cond-isMkt and cond-isSch [
-    ask middles in-radius 2 [
-      set densidadPoblacional densidadPoblacional / 1.4
-    ]
-    sprout 1 [
-      cell-mid
-      setxy cordx cordy
-    ]
-  ]
-
-  ;; si existen 2 vecinos de clase baja y hay disponibilidad de servicios se crea una nueva celda clase baja
-  if cond-isNeighbor-low and cond-isHop and cond-isSch [
-    ask lowers in-radius 2 [
-      set densidadPoblacional densidadPoblacional / 1.4
-    ]
-    sprout 1 [
-      cell-low
-      setxy cordx cordy
-    ]
-  ]
 end
 
 to reproducir
 
+  let newX 1
+  let newY 1
+  ifelse random-float 1 > 0.5 [
+    ifelse random-float 1 > 0.5 [
+      set newX 1
+      set newY -1
+    ] [
+      set newX 1
+      set newY -1
+    ]
+  ] [
+    if random-float 1 <= 0.5 [
+      set newX -1
+      set newY -1
+    ]
+  ]
+
   ;; para un celda clase alta si su densidad poblacional mayor a 10 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase alta
   if breed = uppers and densidadPoblacional > 10 and cond-isHop and cond-isMkt and cond-isSch [
-    ask uppers in-radius 3 [
-      set densidadPoblacional densidadPoblacional / 1.4
+    ask uppers in-radius 1 [
+      set densidadPoblacional densidadPoblacional / 1.2
     ]
-    if not any? turtles with [xcor = xcor + 1  and ycor = ycor + 1][
+    if not any? turtles with [xcor = xcor + newX  and ycor = ycor + newY][
       hatch 1 [
         cell-up
-        setxy xcor + 1 ycor + 1
+        setxy xcor + newX   ycor + newY
       ]
     ]
   ]
   ;; para un celda clase media si su densidad poblacional mayor a 15 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase media
   if breed = middles and densidadPoblacional > 15 and cond-isHop and cond-isMkt and cond-isSch [
     ask middles in-radius 2 [
-      set densidadPoblacional densidadPoblacional / 1.4
+      set densidadPoblacional densidadPoblacional / 1.3
     ]
-    if not any? turtles with [xcor = xcor + 1  and ycor = ycor + 1][
+    if not any? turtles with [xcor = xcor + newX  and ycor = ycor + newY][
       hatch 1 [
         cell-mid
-        setxy xcor + 1 ycor + 1
+        setxy xcor + newX   ycor + newY
       ]
     ]
   ]
 
   ;; para un celda clase baja si su densidad poblacional mayor a 20 y tiene servicios disponibles se reduce la densidad poblacional y se crea otra celda clase baja
-  if breed = lowers and densidadPoblacional > 20 and cond-isHop and cond-isMkt and cond-isSch [
+  if breed = lowers and densidadPoblacional > 20 and cond-isHop [
     ask lowers in-radius 2 [
       set densidadPoblacional densidadPoblacional / 1.4
     ]
-    if not any? turtles with [xcor = xcor + 1  and ycor = ycor + 1][
+    if not any? turtles with [xcor = xcor + newX  and ycor = ycor + newY][
       hatch 1 [
         cell-low
-        setxy xcor + 1 ycor + 1
+        setxy xcor + newX   ycor + newY
       ]
     ]
   ]
@@ -301,18 +291,7 @@ to mid-to-low
   ]
 end
 
-; ascender de clase, de baja a media si está cerca de un hospital y escuela
-to low-to-mid
-  ask lowers with [cond-isHop and cond-isMkt] [
-    cell-low
-  ]
-end
 
-to mid-to-up
-  ask middles with [cond-isHop and cond-isSch and cond-isMkt] [
-    cell-low
-  ]
-end
 
 ;; Una vencidad muere si tiene una densidad poblacional mayor a 20 y no hay hospitales
 to turtle-die
@@ -327,12 +306,12 @@ end
 to rate
   let score calc-score
 
-  ifelse score <= 22
+  ifelse score <= 27
   [
     set breed lowers
     set color red
   ] [
-    ifelse score <= 35
+    ifelse score <= 40
     [
       set breed middles
       set color orange
@@ -368,13 +347,11 @@ to-report calc-score
    ]
 
   if cond-isMkt and cond-isHop and cond-isSch [
-    set tasaCrecimientoEconomico tasaCrecimientoEconomico - 0.00003
+    set tasaCrecimientoEconomico tasaCrecimientoEconomico + 0.00003
   ]
   report score
 end
 ;; FIN REGLAS DE TRANSICION
-
-
 
 ;; DIBUJAR CELDA MEDIANTE CLICK
 
@@ -440,11 +417,11 @@ end
 ;; Condicionales para las transiciones
 
 to-report cond-isMkt
-  report any? markets in-radius 4
+  report any? markets in-radius 2
 end
 
 to-report cond-isHop
-  report any? hospitals in-radius 5
+  report any? hospitals in-radius 4
 end
 
 to-report cond-isSch
@@ -452,11 +429,11 @@ to-report cond-isSch
 end
 
 to-report cond-isNeighbor-up
-  report any? uppers in-radius 3
+  report any? uppers in-radius 1
 end
 
 to-report cond-isNeighbor-mid
-  report any? middles in-radius 2
+  report any? middles in-radius 1
 end
 
 to-report cond-isNeighbor-low
@@ -501,7 +478,7 @@ community
 community
 50
 300
-120.0
+140.0
 10
 1
 NIL
@@ -694,7 +671,7 @@ num-hop
 num-hop
 0
 100
-55.0
+13.0
 1
 1
 NIL
@@ -709,7 +686,7 @@ num-sch
 num-sch
 0
 100
-54.0
+13.0
 1
 1
 NIL
@@ -724,7 +701,7 @@ num-mkt
 num-mkt
 0
 100
-24.0
+13.0
 1
 1
 NIL
